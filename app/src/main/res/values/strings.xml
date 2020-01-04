@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">PracticaMusicPlayerDef</string>
+    <string name="album">Album:</string>
+    <string name="title">Song:</string>
+    <string name="artist">Artist:</string>
+    <string name="play">Play</string>
+    <string name="select_playlist">Select PlayList</string>
+    <string name="new_playlist">New PlayList</string>
+    <string name="duration">Duration:</string>
+</resources>
