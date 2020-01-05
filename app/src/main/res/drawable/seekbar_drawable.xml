@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:layout_height="wrap_content"
+    android:layout_width="wrap_content">
+    <item android:id="@android:id/background"
+        android:gravity="center_vertical|fill_horizontal">
+        <shape android:shape="rectangle"
+            android:tint="@color/colorPrimaryDark">
+            <corners android:radius="8dp"/>
+            <size android:height="15dp" />
+            <solid android:color="@color/seeckbarColor" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress"
+        android:gravity="center_vertical|fill_horizontal">
+        <scale android:scaleWidth="100%">
+            <selector>
+                <item android:state_enabled="false"
+                    android:drawable="@android:color/transparent" />
+                <item>
+                    <shape android:shape="rectangle"
+                        android:tint="@color/progressSekbar">
+                        <corners android:radius="8dp"/>
+                        <size android:height="15dp" />
+                        <solid android:color="@color/progressSekbar" />
+                    </shape>
+                </item>
+            </selector>
+        </scale>
+    </item>
+</layer-list>

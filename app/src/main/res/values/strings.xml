@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PracticaMusicPlayerDef</string>
+    <string name="app_name">JC-PLAYER</string>
     <string name="album">Album:</string>
     <string name="title">Song:</string>
     <string name="artist">Artist:</string>

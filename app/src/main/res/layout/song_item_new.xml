@@ -5,8 +5,8 @@
     android:id="@+id/linearLayout3"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#C97DFF"
-    android:backgroundTint="#C97DFF"
+    android:background="@color/selectedSong"
+    android:backgroundTint="@color/seeckbarColor"
     android:padding="10dp">
 
     <TextView

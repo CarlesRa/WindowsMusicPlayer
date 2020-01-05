@@ -233,13 +233,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public class PlaySongReciver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (musicPlayerService.getPlayer().isPlaying()){
                 isPlaying = true;
                 initSeekBar(musicPlayerService.getSongDuration());
                 Toast.makeText(musicPlayerService, "Song: "+
                                 musicPlayerService.getSongTitle()
                         , Toast.LENGTH_SHORT).show();
-            }
         }
     }
 

@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#975EBF</color>
-    <color name="colorPrimaryDark">#643E80</color>
-    <color name="colorAccent">#321F40</color>
+    <color name="colorPrimary">#1A7A6F</color>
+    <color name="colorPrimaryDark">#24C5E3</color>
+    <color name="colorAccent">#24E397</color>
+    <color name="seeckbarColor">#28A4FD</color>
+    <color name="progressSekbar">#00FD6C</color>
+    <color name="selectedSong">#24E397</color>
+    <color name="transportColor">#1A7A6F</color>
+    <color name="recycleview">#34FAE3</color>
 </resources>
