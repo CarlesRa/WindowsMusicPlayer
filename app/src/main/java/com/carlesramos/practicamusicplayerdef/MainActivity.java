@@ -12,18 +12,14 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -40,8 +36,6 @@ import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, ISongListener {
 
@@ -66,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         checkPermission();
         viewModel = new MainActiViewModel();
         songs = new ArrayList<>();
-        getMusic();
+
         Collections.sort(songs);
         isPlaying = false;
         btPlay = findViewById(R.id.ibPlayPause);
@@ -78,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         habilitarBotons(false);
         rvSongs = findViewById(R.id.rvSong);
         mySeekBar = findViewById(R.id.sbProgress);
-        isPaused = false;
         final Intent intent = new Intent(this, MusicPlayerService.class);
 
         if (!isMyServiceRunning(MusicPlayerService.class)) {
@@ -91,16 +84,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //Registre els recivers
         IntentFilter filter = new IntentFilter();
-        filter.addAction(MusicPlayerService.PLAY_THIS);
+        filter.addAction(MusicPlayerService.INIT_SEEKBAR);
         final PlaySongReciver playSongReciver = new PlaySongReciver();
         LocalBroadcastManager.getInstance(this).registerReceiver(playSongReciver, filter);
-        //adapte les dades al recyclerView
-        DividerItemDecoration itemDecorator = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
-        itemDecorator.setDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.divider));
-        rvSongs.setAdapter(new SongAdapter(MainActivity.this, songs,
-                MainActivity.this));
-        rvSongs.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-        rvSongs.addItemDecoration(itemDecorator);
+
 
         //cree el executor per a la seekbar
         ScheduledExecutorService executors = Executors.newSingleThreadScheduledExecutor();
@@ -140,6 +127,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder)service;
             musicPlayerService = binder.getService();
+            //adapte les dades al recyclerView
+            DividerItemDecoration itemDecorator = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
+            itemDecorator.setDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.divider));
+            rvSongs.setHasFixedSize(true);
+            rvSongs.setAdapter(new SongAdapter(MainActivity.this, musicPlayerService.getSongs(),
+                    MainActivity.this));
+            rvSongs.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+            rvSongs.addItemDecoration(itemDecorator);
         }
 
         @Override
@@ -155,10 +150,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.ibPlayPause : {
                 if (!isPlaying){
                     btPlay.setImageResource(R.drawable.pause);
-                    musicPlayerService.play(this, songs.get(arrayPosition).getPath(), false);
-                    if (!isPaused) {
-                        mySeekBar.setMax(songs.get(arrayPosition).getDuration());
-                    }
+                    musicPlayerService.play();
                     isPlaying = true;
                     habilitarBotons(true);
                 }
@@ -166,29 +158,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     btPlay.setImageResource(R.drawable.baseline_play_arrow_black_18dp);
                     musicPlayerService.pause();
                     isPlaying = false;
-                    isPaused = true;
                     habilitarBotons(false);
                 }
                 break;
             }
             case R.id.ibNext : {
-                arrayPosition++;
-                if (arrayPosition >= songs.size() - 1){
-                    arrayPosition = 0;
-                }
-                musicPlayerService.nextPrev(this, songs.get(arrayPosition).getPath());
-                initSeekBar(songs.get(arrayPosition).getDuration());
-                Toast.makeText(MainActivity.this, songs.get(arrayPosition).getTitle(), Toast.LENGTH_SHORT).show();
+                musicPlayerService.next();
                 break;
             }
             case R.id.ibPrev : {
-                arrayPosition--;
-                if (arrayPosition < 0){
-                    arrayPosition = songs.size() - 1;
-                }
-                musicPlayerService.nextPrev(this, songs.get(arrayPosition).getPath());
-                initSeekBar(songs.get(arrayPosition).getDuration());
-                Toast.makeText(MainActivity.this, songs.get(arrayPosition).getTitle(), Toast.LENGTH_SHORT).show();
+                musicPlayerService.prev();
                 break;
             }
         }
@@ -196,13 +175,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onSelectedSong(int position) {
-        Toast.makeText(musicPlayerService, "Song: "+
-        songs.get(position).
-         getTitle(), Toast.LENGTH_SHORT).show();
         btPlay.setImageResource(R.drawable.pause);
-        musicPlayerService.play(this, songs.get(position).getPath(),true);
-        initSeekBar(songs.get(position).getDuration());
-        arrayPosition = position;
+        musicPlayerService.play(position);
         isPlaying = true;
         habilitarBotons(true);
     }
@@ -215,38 +189,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else{
             btNext.setClickable(false);
             btPrev.setClickable(false);
-        }
-    }
-
-    public void getMusic(){
-        String title;
-        String artist;
-        String album;
-        int duration;
-        String path;
-        String imagePath;
-
-        ContentResolver contentResolver = getContentResolver();
-        Uri uri = EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
-        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-        Cursor songCursor = contentResolver.query(uri, null, selection, null, sortOrder);
-        if (songCursor != null && songCursor.moveToFirst()){
-            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            int albumTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-            int songDuration = songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-            int songLocation = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
-
-            while (songCursor.moveToNext()){
-                title = songCursor.getString(songTitle);
-                artist= songCursor.getString(songArtist);
-                album = songCursor.getString(albumTitle);
-                duration = songCursor.getInt(songDuration);
-                path = songCursor.getString(songLocation);
-                songs.add(new Song(title,artist,album,duration,path));
-            }
-            songCursor.close();
         }
     }
 
@@ -291,15 +233,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public class PlaySongReciver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (arrayPosition < songs.size()) {
-                arrayPosition++;
+            if (musicPlayerService.getPlayer().isPlaying()){
+                isPlaying = true;
+                initSeekBar(musicPlayerService.getSongDuration());
+                Toast.makeText(musicPlayerService, "Song: "+
+                                musicPlayerService.getSongTitle()
+                        , Toast.LENGTH_SHORT).show();
             }
-            else{
-                arrayPosition = 0;
-            }
-            isPlaying = true;
-            initSeekBar(songs.get(arrayPosition).getDuration());
-            musicPlayerService.play(MainActivity.this, songs.get(arrayPosition).getPath(), false);
         }
     }
 

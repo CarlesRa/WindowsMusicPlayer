@@ -83,15 +83,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
         @Override
         public void onClick(View v) {
-            notifyItemChanged(selectedPos);
-            selectedPos = getAdapterPosition();
-            notifyItemChanged(selectedPos);
             listener.onSelectedSong(getAdapterPosition());
-        }
-
-        public void setSelectedPosition(int pos){
-            notifyItemChanged(selectedPos);
-            selectedPos = pos;
         }
     }
 }

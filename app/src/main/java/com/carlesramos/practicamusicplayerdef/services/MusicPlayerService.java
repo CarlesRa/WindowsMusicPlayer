@@ -4,20 +4,17 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.carlesramos.practicamusicplayerdef.MainActivity;
@@ -35,16 +32,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     private final IBinder binder = new LocalBinder();
     public static final String TAG = "MusicPlayerService";
-    public static final String PLAY_THIS = "com.carlesramos.practicamusicplayer";
-    public static final String EXTRA_CANCIONES = "com.carlesramos.extracanciones";
-    public static final String GO_SEEKBAR = "com.carlesramos.goseekbar";
+    public static final String INIT_SEEKBAR = "com.carlesramos.init_seekbar";
 
     private ArrayList<Song> songs;
     private MediaPlayer player;
     private boolean isPaused;
-    private Intent takeYourSongsIntent;
-    private Intent goSeekBarIntent;
-    private long count;
+    private Intent initSeekBarIntent;
+    private boolean playContinuous;
     private int arrayPosition;
 
     @Override
@@ -53,25 +47,24 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         Log.i(TAG,"onCreate");
         isPaused = false;
         player = new MediaPlayer();
-        songs = new ArrayList<>();
-        getMusicFromExternal();
-        Collections.sort(songs);
         player.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(this);
-        takeYourSongsIntent = new Intent();
-        takeYourSongsIntent.setAction(PLAY_THIS);
-        count = 0;
+        player.setOnErrorListener(this);
+        songs = new ArrayList<>();
+        getMusicFromExternal();
+        Collections.sort(songs);
         arrayPosition = 0;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand");
-        goSeekBarIntent = new Intent();
-        goSeekBarIntent.setAction(GO_SEEKBAR);
-
+        if (player.isPlaying()){
+            player.pause();
+        }
+        initSeekBarIntent = new Intent();
+        initSeekBarIntent.setAction(INIT_SEEKBAR);
         return START_NOT_STICKY;
     }
 
@@ -91,24 +84,30 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy");
-        stopSelf();
+        player = null;
         super.onDestroy();
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        createNotification();
+        Log.i(TAG, "OnPrepared");
+        //createNotification();
+        LocalBroadcastManager.getInstance(this).sendBroadcast(initSeekBarIntent);
         mp.start();
+        playContinuous = true;
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (count > 0) LocalBroadcastManager.getInstance(this).sendBroadcast(takeYourSongsIntent);
-        count++;
+        Log.i(TAG, "OnComletion");
+        if (playContinuous){
+            next();
+        }
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        Log.i(TAG, "OnError");
         return false;
     }
 
@@ -118,66 +117,51 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
-    public void play(Context context, String path, boolean isFromList){
-    //public void play() {
-        //TODO revisar los if jejjee....
-        if (!player.isPlaying() && !isPaused) {
-            player.reset();
-            try {
-                player.setDataSource(path);
-                player.prepareAsync();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        else if (player.isPlaying()){
-            player.reset();
-            try {
-                player.setDataSource(path);
-                player.prepareAsync();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-        else if (!player.isPlaying() && isFromList){
-            player.reset();
-            try {
-                player.setDataSource(path);
-                player.prepareAsync();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        else if (!player.isPlaying() && isPaused){
-            player.start();
-            isPaused = false;
-
-        }
-        else if (!player.isPlaying()){
-            try {
-                player.setDataSource(path);
-                player.prepareAsync();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    public void play() {
         if (!player.isPlaying() && !isPaused){
             try {
                 player.reset();
-                player.setDataSource(path);
+                player.setDataSource(songs.get(arrayPosition).getPath());
+                player.prepareAsync();
+                player.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else if(isPaused) player.start();
+    }
+
+    public void play(int arrayPosition){
+        this.arrayPosition = arrayPosition;
+        if (!player.isPlaying() && !isPaused){
+            try {
+                player.reset();
+                player.setDataSource(songs.get(arrayPosition).getPath());
                 player.prepareAsync();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        else if (isPaused){
-            player.start();
+        else {
+            try {
+                player.reset();
+                player.setDataSource(songs.get(arrayPosition).getPath());
+                player.prepareAsync();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
-    /*public void play(int arrayPosition){
-        this.arrayPosition = arrayPosition;
+    public void pause(){
+        player.pause();
+        isPaused = true;
+    }
+
+    public void next(){
+        arrayPosition++;
+        if (arrayPosition == songs.size() - 1) arrayPosition = 0;
         try {
             player.reset();
             player.setDataSource(songs.get(arrayPosition).getPath());
@@ -185,43 +169,24 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }*/
-
-    public void pause(){
-        player.pause();
-        isPaused = true;
-    }
-
-    public void nextPrev(Context context, String path){
-    //public void next(){
-        try {
-            player.reset();
-            player.setDataSource(path);
-            player.prepareAsync();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
     }
-    /*public void prev(){
+    public void prev(){
         arrayPosition--;
         if (arrayPosition < 0){
             arrayPosition = songs.size() - 1;
         }
-        if (player.isPlaying()){
-            player.stop();
+        try {
             player.reset();
-            try {
-                player.setDataSource(songs.get(arrayPosition).getPath());
-                player.prepareAsync();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            player.setDataSource(songs.get(arrayPosition).getPath());
+            player.prepareAsync();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    }*/
+    }
 
     public MediaPlayer getPlayer() {
-        return player;
+        return this.player;
     }
 
     public int getPosition(){
@@ -248,6 +213,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     public ArrayList<Song> getSongs() {
         return songs;
+    }
+
+    public int getArrayPosition() {
+        return arrayPosition;
     }
 
     public boolean isPlaying(){
