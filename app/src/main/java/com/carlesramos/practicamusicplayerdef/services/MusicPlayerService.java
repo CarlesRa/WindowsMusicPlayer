@@ -33,6 +33,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private final IBinder binder = new LocalBinder();
     public static final String TAG = "MusicPlayerService";
     public static final String INIT_SEEKBAR = "com.carlesramos.init_seekbar";
+    public static final String ALERT = "com.carlesramos.alert";
     public static final int CANCIONES_MUESTRA = 4;
 
     private ArrayList<Song> songs;
@@ -40,6 +41,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private MediaPlayer player;
     private boolean isPaused;
     private Intent initSeekBarIntent;
+    private Intent alertIntent;
     private boolean playContinuous;
     private boolean isInTestMode;
     private int arrayPosition;
@@ -52,6 +54,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         playContinuous = false;
         initSeekBarIntent = new Intent();
         initSeekBarIntent.setAction(INIT_SEEKBAR);
+        alertIntent = new Intent();
+        alertIntent.setAction(ALERT);
         player = new MediaPlayer();
         songs = new ArrayList<>();
         uris = new Uri[CANCIONES_MUESTRA];
@@ -59,6 +63,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         if (songs.size() == 0){
             getMusicFromRaw();
             isInTestMode = true;
+            LocalBroadcastManager.getInstance(this).sendBroadcast(alertIntent);
         }
         Collections.sort(songs);
         arrayPosition = 0;
@@ -256,6 +261,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
+    //Per al testMode
     public void getMusicFromRaw(){
         MediaPlayer m;
         int songId;

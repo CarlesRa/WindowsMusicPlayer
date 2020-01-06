@@ -9,9 +9,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -68,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btNext.setOnClickListener(this);
         rvSongs = findViewById(R.id.rvSong);
         mySeekBar = findViewById(R.id.sbProgress);
+        mySeekBar.setVisibility(View.INVISIBLE);
         habilitarBotons(false);
 
         final Intent intent = new Intent(this, MusicPlayerService.class);
@@ -80,10 +83,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         //Registre els recivers
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(MusicPlayerService.INIT_SEEKBAR);
+        IntentFilter intitSeekbarFilter = new IntentFilter();
+        intitSeekbarFilter.addAction(MusicPlayerService.INIT_SEEKBAR);
         final PlaySongReciver playSongReciver = new PlaySongReciver();
-        LocalBroadcastManager.getInstance(this).registerReceiver(playSongReciver, filter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(playSongReciver, intitSeekbarFilter);
+
+        IntentFilter alertFilter = new IntentFilter();
+        alertFilter.addAction(MusicPlayerService.ALERT);
+        final AlertReciver alertReciver = new AlertReciver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(alertReciver, alertFilter);
 
         //cree el executor per a la seekbar
         ScheduledExecutorService executors = Executors.newSingleThreadScheduledExecutor();
@@ -208,21 +216,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         viewModel.setSeeckBarPosition(mySeekBar.getProgress());
-        viewModel.setSongPosition(arrayPosition);
         unbindService(connection);
     }
 
-    public class PlaySongReciver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-                initSeekBar(musicPlayerService.getSongDuration());
-                Toast.makeText(musicPlayerService, "Song: "+
-                                musicPlayerService.getSongTitle()
-                        , Toast.LENGTH_SHORT).show();
-        }
-    }
-
     public void playing(){
+        mySeekBar.setVisibility(View.VISIBLE);
         btPlay.setImageResource(R.drawable.pause);
         isPlaying = true;
     }
@@ -240,6 +238,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else{
             btNext.setClickable(false);
             btPrev.setClickable(false);
+        }
+    }
+
+    public class PlaySongReciver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            initSeekBar(musicPlayerService.getSongDuration());
+            Toast.makeText(musicPlayerService, "Song: "+
+                            musicPlayerService.getSongTitle()
+                    , Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public class AlertReciver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+            alertDialog.setTitle("Not Music data found in your phone");
+            alertDialog.setMessage("Pres Ok to init in Test Mode");
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
         }
     }
 }
