@@ -69,11 +69,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btPrev.setOnClickListener(this);
         btPlay.setOnClickListener(this);
         btNext.setOnClickListener(this);
-        habilitarBotons(false);
         rvSongs = findViewById(R.id.rvSong);
         mySeekBar = findViewById(R.id.sbProgress);
-        final Intent intent = new Intent(this, MusicPlayerService.class);
+        habilitarBotons(false);
 
+        final Intent intent = new Intent(this, MusicPlayerService.class);
         if (!isMyServiceRunning(MusicPlayerService.class)) {
             startService(intent);
             bindService(intent, connection, Context.BIND_AUTO_CREATE);
@@ -119,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 seekBar.setProgress(musicPlayerService.getPosition());
             }
         });
-
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -149,16 +148,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()){
             case R.id.ibPlayPause : {
                 if (!isPlaying){
-                    btPlay.setImageResource(R.drawable.pause);
-                    musicPlayerService.play();
-                    isPlaying = true;
+                    playing();
                     habilitarBotons(true);
+                    musicPlayerService.play();
                 }
                 else{
-                    btPlay.setImageResource(R.drawable.baseline_play_arrow_black_18dp);
-                    musicPlayerService.pause();
-                    isPlaying = false;
+                    paused();
                     habilitarBotons(false);
+                    musicPlayerService.pause();
                 }
                 break;
             }
@@ -175,21 +172,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onSelectedSong(int position) {
-        btPlay.setImageResource(R.drawable.pause);
-        musicPlayerService.play(position);
-        isPlaying = true;
+        playing();
         habilitarBotons(true);
-    }
-
-    public void habilitarBotons(boolean habilite){
-        if (habilite){
-            btPrev.setClickable(true);
-            btNext.setClickable(true);
-        }
-        else{
-            btNext.setClickable(false);
-            btPrev.setClickable(false);
-        }
+        musicPlayerService.play(position);
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -233,7 +218,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public class PlaySongReciver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-                isPlaying = true;
                 initSeekBar(musicPlayerService.getSongDuration());
                 Toast.makeText(musicPlayerService, "Song: "+
                                 musicPlayerService.getSongTitle()
@@ -241,4 +225,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    public void playing(){
+        btPlay.setImageResource(R.drawable.pause);
+        isPlaying = true;
+    }
+
+    public void paused(){
+        btPlay.setImageResource(R.drawable.baseline_play_arrow_black_18dp);
+        isPlaying = false;
+    }
+
+    public void habilitarBotons(boolean habilite){
+        if (habilite){
+            btPrev.setClickable(true);
+            btNext.setClickable(true);
+        }
+        else{
+            btNext.setClickable(false);
+            btPrev.setClickable(false);
+        }
+    }
 }
