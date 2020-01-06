@@ -7,7 +7,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.Manifest;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
@@ -24,13 +23,11 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Toast;
-
 import com.carlesramos.practicamusicplayerdef.adapters.SongAdapter;
 import com.carlesramos.practicamusicplayerdef.interficies.ISongListener;
 import com.carlesramos.practicamusicplayerdef.model.Song;
 import com.carlesramos.practicamusicplayerdef.services.MusicPlayerService;
 import com.carlesramos.practicamusicplayerdef.viewmodel.MainActiViewModel;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Executors;
@@ -88,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final PlaySongReciver playSongReciver = new PlaySongReciver();
         LocalBroadcastManager.getInstance(this).registerReceiver(playSongReciver, filter);
 
-
         //cree el executor per a la seekbar
         ScheduledExecutorService executors = Executors.newSingleThreadScheduledExecutor();
         executors.scheduleAtFixedRate(new Runnable() {
@@ -100,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mHandler.postDelayed(this, 200);
             }
         }, 0, 1000, TimeUnit.MILLISECONDS);
+
         mySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -138,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-
+            Toast.makeText(MainActivity.this, "Music service disconected", Toast.LENGTH_LONG).show();
         }
 
     };

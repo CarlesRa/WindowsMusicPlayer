@@ -33,12 +33,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private final IBinder binder = new LocalBinder();
     public static final String TAG = "MusicPlayerService";
     public static final String INIT_SEEKBAR = "com.carlesramos.init_seekbar";
+    public static final int CANCIONES_MUESTRA = 4;
 
     private ArrayList<Song> songs;
+    private Uri[] uris;
     private MediaPlayer player;
     private boolean isPaused;
     private Intent initSeekBarIntent;
     private boolean playContinuous;
+    private boolean isInTestMode;
     private int arrayPosition;
 
     @Override
@@ -46,13 +49,17 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         super.onCreate();
         Log.i(TAG,"onCreate");
         isPaused = false;
+        playContinuous = false;
+        initSeekBarIntent = new Intent();
+        initSeekBarIntent.setAction(INIT_SEEKBAR);
         player = new MediaPlayer();
-        player.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
-        player.setOnPreparedListener(this);
-        player.setOnCompletionListener(this);
-        player.setOnErrorListener(this);
         songs = new ArrayList<>();
+        uris = new Uri[CANCIONES_MUESTRA];
         getMusicFromExternal();
+        if (songs.size() == 0){
+            getMusicFromRaw();
+            isInTestMode = true;
+        }
         Collections.sort(songs);
         arrayPosition = 0;
     }
@@ -60,11 +67,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand");
-        if (player.isPlaying()){
-            player.pause();
-        }
-        initSeekBarIntent = new Intent();
-        initSeekBarIntent.setAction(INIT_SEEKBAR);
+        player.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
+        player.setOnPreparedListener(this);
+        player.setOnCompletionListener(this);
+        player.setOnErrorListener(this);
         return START_NOT_STICKY;
     }
 
@@ -103,6 +109,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         if (playContinuous){
             next();
         }
+        playContinuous = true;
     }
 
     @Override
@@ -121,7 +128,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         if (!isPaused){
             try {
                 player.reset();
-                player.setDataSource(songs.get(arrayPosition).getPath());
+                if(!isInTestMode){
+                    player.setDataSource(songs.get(arrayPosition).getPath());
+                }
+                else player.setDataSource(this, uris[arrayPosition]);
+
                 player.prepareAsync();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -138,7 +149,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         try {
             player.reset();
-            player.setDataSource(songs.get(arrayPosition).getPath());
+            if(!isInTestMode){
+                player.setDataSource(songs.get(arrayPosition).getPath());
+            }
+            else player.setDataSource(this, uris[arrayPosition]);
             player.prepareAsync();
         } catch (IOException e) {
             e.printStackTrace();
@@ -242,4 +256,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
+    public void getMusicFromRaw(){
+        MediaPlayer m;
+        int songId;
+        uris[0] = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.song1);
+        uris[1] = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.song2);
+        uris[2] = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.song3);
+        uris[3] = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.song4);
+        for (int i=0; i<CANCIONES_MUESTRA; i++){
+            songId = getResources().getIdentifier("raw/song"+(i+1),null, getPackageName());
+            m = MediaPlayer.create(this, songId);
+            songs.add(new Song("Song"+(i+1), "Test Mode", "Test Mode", m.getDuration(), "Test Mode"));
+            m.release();
+        }
+
+    }
 }
