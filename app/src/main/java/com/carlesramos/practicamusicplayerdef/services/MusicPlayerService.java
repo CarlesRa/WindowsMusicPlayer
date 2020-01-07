@@ -116,7 +116,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         Log.i(TAG, "OnError");
-        play();
         return false;
     }
 
