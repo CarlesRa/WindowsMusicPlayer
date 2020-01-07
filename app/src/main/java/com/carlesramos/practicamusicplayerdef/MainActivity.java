@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isPaused;
     private Handler mHandler = new Handler();
     private MainActiViewModel viewModel;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         rvSongs = findViewById(R.id.rvSong);
         mySeekBar = findViewById(R.id.sbProgress);
-        mySeekBar.setVisibility(View.INVISIBLE);
         habilitarBotons(false);
 
         final Intent intent = new Intent(this, MusicPlayerService.class);
@@ -238,7 +236,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void playing(){
-        mySeekBar.setVisibility(View.VISIBLE);
         btPlay.setImageResource(R.drawable.pause);
         isPlaying = true;
     }

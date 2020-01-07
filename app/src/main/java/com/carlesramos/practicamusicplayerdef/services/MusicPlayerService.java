@@ -68,7 +68,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand");
         try {
-            player.setDataSource(songs.get(0).getPath());
+            if (!isInTestMode) {
+                player.setDataSource(songs.get(arrayPosition).getPath());
+            }
+            else player.setDataSource(this, uris[arrayPosition]);
         } catch (IOException e) {
             e.printStackTrace();
         }
