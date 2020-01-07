@@ -8,9 +8,8 @@ import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
 
-@Entity
-public class Song implements Comparable<Song>, Parcelable, Serializable {
 
+public class Song implements Comparable<Song>, Parcelable, Serializable {
     private int id;
     private String title;
     private String artist;
