@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#1A7A6F</color>
-    <color name="colorPrimaryDark">#24C5E3</color>
+    <color name="colorPrimary">#34DCFA</color>
+    <color name="colorPrimaryDark">#13A3C0</color>
     <color name="colorAccent">#24E397</color>
     <color name="seeckbarColor">#28A4FD</color>
     <color name="progressSekbar">#00FD6C</color>

@@ -249,6 +249,5 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             songs.add(new Song("Song"+(i+1), "Test Mode", "Test Mode", m.getDuration(), "Test Mode"));
             m.release();
         }
-
     }
 }

@@ -13,6 +13,7 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,9 +21,12 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -30,15 +34,22 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 import com.carlesramos.practicamusicplayerdef.adapters.SongAdapter;
 import com.carlesramos.practicamusicplayerdef.interficies.ISongListener;
+import com.carlesramos.practicamusicplayerdef.model.Song;
 import com.carlesramos.practicamusicplayerdef.services.MusicPlayerService;
-import com.carlesramos.practicamusicplayerdef.viewmodel.MainActiViewModel;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, ISongListener {
 
     private static final int ACCES_MUSIC_DIRECTORY = 1;
+    public static final int CANCIONES_MUESTRA = 4;
+
+    private ArrayList<Song> songs;
     private RecyclerView rvSongs;
     private ImageButton btPlay;
     private ImageButton btNext;
@@ -48,15 +59,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isPlaying;
     private MusicPlayerService musicPlayerService;
     private SeekBar mySeekBar;
-    private boolean isPaused;
     private Handler mHandler = new Handler();
-    private MainActiViewModel viewModel;
+    private boolean isInTestMode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        checkPermission();
-        viewModel = new MainActiViewModel();
+        setContentView(R.layout.activity_main_02);
         isPlaying = false;
         btPlay = findViewById(R.id.ibPlayPause);
         btNext = findViewById(R.id.ibNext);
@@ -68,10 +77,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btNext.setOnClickListener(this);
         btNewPlaylist.setOnClickListener(this);
         btSelectPlaylist.setOnClickListener(this);
-
+        songs = new ArrayList<>();
         rvSongs = findViewById(R.id.rvSong);
         mySeekBar = findViewById(R.id.sbProgress);
         habilitarBotons(false);
+
+        checkPermission();
+        getMusicFromExternal();
+        Collections.sort(songs);
 
         //referencie el service i l'inicie
         final Intent intent = new Intent(this, MusicPlayerService.class);
@@ -114,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 seekBar.setProgress(musicPlayerService.getPosition());
@@ -136,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder)service;
             musicPlayerService = binder.getService();
+
             //adapte les dades al recyclerView
             DividerItemDecoration itemDecorator = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
             itemDecorator.setDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.divider));
@@ -218,22 +231,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onConfigurationChanged(newConfig);
     }
 
-    /**
-     * Métode per demanar els permisos, nomes serán demanats una vegada
-     * si son acceptats
-     */
     public void checkPermission(){
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)){
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, ACCES_MUSIC_DIRECTORY);
-            }
-            else{
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, ACCES_MUSIC_DIRECTORY);
-            }
+        int perm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        if(perm != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 255);
         }
     }
 
@@ -253,8 +254,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        viewModel.setSeeckBarPosition(mySeekBar.getProgress());
-        viewModel.setSongDuration(musicPlayerService.getSongDuration());
         unbindService(connection);
     }
 
@@ -279,12 +278,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     public void habilitarBotons(boolean habilite){
         if (habilite){
-            btPrev.setClickable(true);
-            btNext.setClickable(true);
+            btPrev.setClickable(habilite);
+            btNext.setClickable(habilite);
         }
         else{
-            btNext.setClickable(false);
-            btPrev.setClickable(false);
+            btNext.setClickable(habilite);
+            btPrev.setClickable(habilite);
+        }
+    }
+
+    /**
+     * Metode per a buscar musica en el almacenament del dispositiu
+     */
+    public void getMusicFromExternal(){
+        String title;
+        String artist;
+        String album;
+        int duration;
+        String path;
+
+        ContentResolver contentResolver = getContentResolver();
+        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+        Cursor songCursor = contentResolver.query(EXTERNAL_CONTENT_URI, null, selection, null, sortOrder);
+        if (songCursor != null && songCursor.moveToFirst()){
+            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            int albumTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+            int songDuration = songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+            int songLocation = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+
+            while (songCursor.moveToNext()){
+                title = songCursor.getString(songTitle);
+                artist= songCursor.getString(songArtist);
+                album = songCursor.getString(albumTitle);
+                duration = songCursor.getInt(songDuration);
+                path = songCursor.getString(songLocation);
+                songs.add(new Song(title,artist,album,duration,path));
+            }
+            songCursor.close();
         }
     }
 
@@ -295,8 +327,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public class InitSeekReciver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            viewModel.setSeeckBarPosition(mySeekBar.getProgress());
-            viewModel.setSongDuration(musicPlayerService.getSongDuration());
             initSeekBar(musicPlayerService.getSongDuration());
             Toast.makeText(musicPlayerService, getText(R.string.title)+
                             musicPlayerService.getSongTitle()
@@ -323,4 +353,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             alertDialog.show();
         }
     }
+
 }
