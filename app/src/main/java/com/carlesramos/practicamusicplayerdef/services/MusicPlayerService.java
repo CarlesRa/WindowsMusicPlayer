@@ -97,7 +97,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy");
-        player = null;
         super.onDestroy();
     }
 
