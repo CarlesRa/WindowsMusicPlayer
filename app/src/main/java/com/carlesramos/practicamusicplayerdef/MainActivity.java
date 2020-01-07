@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mySeekBar = findViewById(R.id.sbProgress);
         habilitarBotons(false);
 
+        //referencie el service i l'inicie
         final Intent intent = new Intent(this, MusicPlayerService.class);
         if (!isMyServiceRunning(MusicPlayerService.class)) {
             startService(intent);
@@ -124,7 +125,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    /**
+     * Cree la conexió amb el service
+     */
     private ServiceConnection connection = new ServiceConnection() {
+        //Quan el service esta conectat, adapte el recyclerView.
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder)service;
@@ -190,6 +195,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         musicPlayerService.play(position);
     }
 
+    /**
+     * Metode per saber si el servei esta en funcionament
+     * la idea era crear una notificació i al tornar saber si el service esta corrent
+     * @param serviceClass
+     * @return si esta o no en funcionament
+     */
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -200,6 +211,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
+    /**
+     * Métode per demanar els permisos, nomes serán demanats una vegada
+     * si son acceptats
+     */
     public void checkPermission(){
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
@@ -215,11 +230,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * Metode per iniciar  la seekbar
+     * @param duration duració de la canço que es reprodueix.
+     */
     public void initSeekBar(int duration){
         mySeekBar.setProgress(0);
         mySeekBar.setMax(duration);
     }
 
+    /**
+     * Intentava guardar per a quan es tornara a inciar la activity
+     * que la seeckbar estara igual, es bona idea?
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -228,16 +251,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         unbindService(connection);
     }
 
+    /**
+     * Metode per cambiar la icona
+     */
     public void playing(){
         btPlay.setImageResource(R.drawable.pause);
         isPlaying = true;
     }
-
+    /**
+     * Metode per cambiar la icona
+     */
     public void paused(){
         btPlay.setImageResource(R.drawable.baseline_play_arrow_black_18dp);
         isPlaying = false;
     }
 
+    /**
+     * Métode per habilitar o deshabilitar els botons next-prev
+     * @param habilite pasem true per habilitar i al contrari
+     */
     public void habilitarBotons(boolean habilite){
         if (habilite){
             btPrev.setClickable(true);
@@ -249,6 +281,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * BroadcastReciver per a iniciar la seeckbar
+     * llançat per el servei
+     */
     public class InitSeekReciver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -260,7 +296,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     , Toast.LENGTH_SHORT).show();
         }
     }
-
+    /**
+     * BroadcastReciver per a llançar la alerta, si no es troven arxius musicals
+     * llançat per el servei
+     */
     public class AlertReciver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
