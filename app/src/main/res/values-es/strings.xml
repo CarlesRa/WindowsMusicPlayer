@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">JC-PLAYER</string>
+    <string name="album">Album:</string>
+    <string name="title">Canción:</string>
+    <string name="artist">Artista:</string>
+    <string name="play">Play</string>
+    <string name="select_playlist">Play PlayList</string>
+    <string name="new_playlist">Nueva PlayList</string>
+    <string name="duration">Duración:</string>
+    <string name="alertTitle">No se Han encontrado archivos musicales en el teléfono</string>
+    <string name="alertMessage">Pulse la pantalla para iniciar en Modo Test</string>
+    <string name="serviceDisconnected">El servicio de música esta desconectado</string>
+    <string name="fullVersion">Solo para usuarios premium xD</string>
+</resources>

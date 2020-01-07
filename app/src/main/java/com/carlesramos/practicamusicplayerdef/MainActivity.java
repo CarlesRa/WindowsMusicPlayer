@@ -1,16 +1,13 @@
 package com.carlesramos.practicamusicplayerdef;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -24,7 +21,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PersistableBundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -32,11 +28,8 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 import com.carlesramos.practicamusicplayerdef.adapters.SongAdapter;
 import com.carlesramos.practicamusicplayerdef.interficies.ISongListener;
-import com.carlesramos.practicamusicplayerdef.model.Song;
 import com.carlesramos.practicamusicplayerdef.services.MusicPlayerService;
 import com.carlesramos.practicamusicplayerdef.viewmodel.MainActiViewModel;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -150,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Toast.makeText(MainActivity.this, "Music service disconected", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, getText(R.string.serviceDisconnected), Toast.LENGTH_LONG).show();
         }
 
     };
@@ -180,11 +173,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.btNewPlayList :{
-                Toast.makeText(MainActivity.this, "Disponible con versión completa", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getText(R.string.fullVersion), Toast.LENGTH_SHORT).show();
                 break;
             }
             case R.id.btSelectPlaylist : {
-                Toast.makeText(MainActivity.this, "Disponible con versión completa", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, getText(R.string.fullVersion), Toast.LENGTH_SHORT).show();
                 break;
             }
         }
@@ -262,21 +255,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             viewModel.setSeeckBarPosition(mySeekBar.getProgress());
             viewModel.setSongDuration(musicPlayerService.getSongDuration());
             initSeekBar(musicPlayerService.getSongDuration());
-            Toast.makeText(musicPlayerService, "Song: "+
+            Toast.makeText(musicPlayerService, getText(R.string.title)+
                             musicPlayerService.getSongTitle()
                     , Toast.LENGTH_SHORT).show();
         }
     }
 
     public class AlertReciver extends BroadcastReceiver {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-            alertDialog.setTitle("Not Music data found in your phone");
-            alertDialog.setMessage("Pres Ok to init in Test Mode");
+            alertDialog.setTitle(getString(R.string.alertTitle));
+            alertDialog.setMessage(getString(R.string.alertMessage));
             alertDialog.setIcon(R.drawable.jo);
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "TEST MODE",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();

@@ -36,11 +36,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private MediaPlayer player;
     private boolean isPaused;
     private Intent initSeekBarIntent;
-    private Intent alertIntent;
     private boolean isInTestMode;
     private int arrayPosition;
     private NotificationManager notificationManager;
-
 
     @Override
     public void onCreate() {
@@ -49,7 +47,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         isPaused = false;
         initSeekBarIntent = new Intent();
         initSeekBarIntent.setAction(INIT_SEEKBAR);
-        alertIntent = new Intent();
+        Intent alertIntent = new Intent();
         alertIntent.setAction(ALERT);
         player = new MediaPlayer();
         songs = new ArrayList<>();
@@ -142,7 +140,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 e.printStackTrace();
             }
         }
-        else if(isPaused) {
+        else {
             player.start();
             isPaused = false;
         }
@@ -172,7 +170,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         arrayPosition++;
         if (arrayPosition == songs.size()) arrayPosition = 0;
         play();
-
     }
     public void prev(){
         arrayPosition--;
@@ -215,10 +212,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         String path;
 
         ContentResolver contentResolver = getContentResolver();
-        Uri uri = EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-        Cursor songCursor = contentResolver.query(uri, null, selection, null, sortOrder);
+        Cursor songCursor = contentResolver.query(EXTERNAL_CONTENT_URI, null, selection, null, sortOrder);
         if (songCursor != null && songCursor.moveToFirst()){
             int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);

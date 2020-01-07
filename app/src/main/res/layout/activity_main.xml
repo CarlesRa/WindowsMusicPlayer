@@ -56,6 +56,7 @@
             android:layout_marginRight="40dp"
             android:background="@drawable/color_button"
             android:clickable="true"
+            android:focusable="true"
             android:focusableInTouchMode="true"
             android:padding="10dp"
             android:text="@string/select_playlist"
@@ -73,7 +74,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/sbProgress"
-            app:srcCompat="@drawable/baseline_play_arrow_black_18dp" />
+            app:srcCompat="@drawable/baseline_play_arrow_black_18dp"
+            android:contentDescription="TODO" />
 
         <ImageButton
             android:id="@+id/ibPrev"
@@ -85,7 +87,8 @@
             app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/sbProgress"
-            app:srcCompat="@drawable/previous" />
+            app:srcCompat="@drawable/previous"
+            android:contentDescription="TODO" />
 
         <ImageButton
             android:id="@+id/ibNext"
@@ -97,7 +100,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/ibPlayPause"
             app:layout_constraintTop_toBottomOf="@+id/sbProgress"
-            app:srcCompat="@drawable/next" />
+            app:srcCompat="@drawable/next"
+            android:contentDescription="TODO" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

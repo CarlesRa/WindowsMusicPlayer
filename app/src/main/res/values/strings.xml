@@ -7,4 +7,8 @@
     <string name="select_playlist">Select PlayList</string>
     <string name="new_playlist">New PlayList</string>
     <string name="duration">Duration:</string>
+    <string name="alertTitle">Not audio data found in phone</string>
+    <string name="alertMessage">Touch the screen to play in Test Mode</string>
+    <string name="serviceDisconnected">The music service are disconnected</string>
+    <string name="fullVersion">Only for Premium Users xD</string>
 </resources>
