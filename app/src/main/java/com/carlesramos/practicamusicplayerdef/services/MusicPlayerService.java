@@ -110,7 +110,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.i(TAG, "OnComletion");
-            next();
+        next();
     }
 
     @Override
