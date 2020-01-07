@@ -10,10 +10,8 @@
         android:id="@+id/rvSong"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@color/recycleview">
-
-    </androidx.recyclerview.widget.RecyclerView>
+        android:layout_weight="1.5"
+        android:background="@color/recycleview" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -33,11 +31,12 @@
             app:tickMarkTint="#000000" />
 
         <Button
-            android:id="@+id/button7"
+            android:id="@+id/btNewPlayList"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="40dp"
             android:layout_marginLeft="40dp"
+            android:layout_marginTop="20dp"
             android:background="@drawable/color_button"
             android:clickable="true"
             android:focusable="true"
@@ -45,14 +44,14 @@
             android:padding="10dp"
             android:text="@string/new_playlist"
             android:textColor="@android:color/background_light"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ibPlayPause" />
+            app:layout_constraintTop_toBottomOf="@+id/ibPrev" />
 
         <Button
-            android:id="@+id/button8"
+            android:id="@+id/btSelectPlaylist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:layout_marginEnd="40dp"
             android:layout_marginRight="40dp"
             android:background="@drawable/color_button"
@@ -61,9 +60,8 @@
             android:padding="10dp"
             android:text="@string/select_playlist"
             android:textColor="@android:color/background_light"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ibPlayPause" />
+            app:layout_constraintTop_toBottomOf="@+id/ibNext" />
 
         <ImageButton
             android:id="@+id/ibPlayPause"
@@ -100,8 +98,6 @@
             app:layout_constraintStart_toEndOf="@+id/ibPlayPause"
             app:layout_constraintTop_toBottomOf="@+id/sbProgress"
             app:srcCompat="@drawable/next" />
-
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

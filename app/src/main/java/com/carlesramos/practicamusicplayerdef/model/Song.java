@@ -2,7 +2,14 @@ package com.carlesramos.practicamusicplayerdef.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-public class Song implements Comparable<Song>, Parcelable{
+
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+import java.io.Serializable;
+
+@Entity
+public class Song implements Comparable<Song>, Parcelable, Serializable {
 
     private int id;
     private String title;
@@ -39,7 +46,6 @@ public class Song implements Comparable<Song>, Parcelable{
         public Song createFromParcel(Parcel in) {
             return new Song(in);
         }
-
         @Override
         public Song[] newArray(int size) {
             return new Song[size];

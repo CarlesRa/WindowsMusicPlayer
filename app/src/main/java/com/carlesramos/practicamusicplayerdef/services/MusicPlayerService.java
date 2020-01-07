@@ -1,7 +1,6 @@
 package com.carlesramos.practicamusicplayerdef.services;
 
-import android.app.Notification;
-import android.app.PendingIntent;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -13,11 +12,8 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import com.carlesramos.practicamusicplayerdef.MainActivity;
 import com.carlesramos.practicamusicplayerdef.R;
 import com.carlesramos.practicamusicplayerdef.model.Song;
 import java.io.IOException;
@@ -25,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import static android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-import static com.carlesramos.practicamusicplayerdef.App.CHANNEL_ID;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener{
@@ -42,16 +37,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private boolean isPaused;
     private Intent initSeekBarIntent;
     private Intent alertIntent;
-    private boolean playContinuous;
     private boolean isInTestMode;
     private int arrayPosition;
+    private NotificationManager notificationManager;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(TAG,"onCreate");
         isPaused = false;
-        playContinuous = false;
         initSeekBarIntent = new Intent();
         initSeekBarIntent.setAction(INIT_SEEKBAR);
         alertIntent = new Intent();
@@ -72,10 +67,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand");
-        player.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
+        try {
+            player.setDataSource(songs.get(0).getPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        player.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(this);
         player.setOnErrorListener(this);
+
         return START_NOT_STICKY;
     }
 
@@ -100,21 +101,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     @Override
-    public void onPrepared(MediaPlayer mp) {
+    public void onPrepared(MediaPlayer player) {
         Log.i(TAG, "OnPrepared");
-        //createNotification();
-        mp.start();
+        player.start();
         LocalBroadcastManager.getInstance(this).sendBroadcast(initSeekBarIntent);
-        playContinuous = true;
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.i(TAG, "OnComletion");
-        if (playContinuous){
             next();
-        }
-        playContinuous = true;
     }
 
     @Override
@@ -183,10 +179,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         play();
     }
 
-    public MediaPlayer getPlayer() {
-        return this.player;
-    }
-
     public int getPosition(){
         return player.getCurrentPosition();
     }
@@ -197,28 +189,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
-    public void createNotification(){
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Player Custom")
-                .setContentText("hola amigo")
-                .setSmallIcon(R.drawable.ic_album)
-                .setContentIntent(pendingIntent)
-                .build();
-    }
-
     public ArrayList<Song> getSongs() {
         return songs;
-    }
-
-    public int getArrayPosition() {
-        return arrayPosition;
-    }
-
-    public boolean isPlaying(){
-        return player.isPlaying();
     }
 
     public int getSongDuration(){
@@ -229,13 +201,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         return songs.get(arrayPosition).getTitle();
     }
 
+    /**
+     * Metode per a buscar musica en el almacenament del dispositiu
+     */
     public void getMusicFromExternal(){
         String title;
         String artist;
         String album;
         int duration;
         String path;
-        String imagePath;
 
         ContentResolver contentResolver = getContentResolver();
         Uri uri = EXTERNAL_CONTENT_URI;
@@ -261,7 +235,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
-    //Per al testMode
+    /**
+     * obtinc la musica del directori raw
+     */
     public void getMusicFromRaw(){
         MediaPlayer m;
         int songId;

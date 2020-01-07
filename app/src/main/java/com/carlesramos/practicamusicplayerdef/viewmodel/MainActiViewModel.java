@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel;
 
 public class MainActiViewModel extends ViewModel {
     private int seeckBarPosition;
-    private int songPosition;
+    private int songDuration;
 
     public int getSeeckBarPosition() {
         return seeckBarPosition;
@@ -14,12 +14,12 @@ public class MainActiViewModel extends ViewModel {
         this.seeckBarPosition = seeckBarPosition;
     }
 
-    public int getSongPosition() {
-        return songPosition;
+    public int getSongDuration() {
+        return songDuration;
     }
 
-    public void setSongPosition(int songPosition) {
-        this.songPosition = songPosition;
+    public void setSongDuration(int songDuration) {
+        this.songDuration = songDuration;
     }
 
 }
